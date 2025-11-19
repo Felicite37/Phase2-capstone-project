@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navigation from "@/components/navigation";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const _geistSans = Geist({ subsets: ["latin"] });
@@ -9,7 +10,11 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Medium - Read, Write, and Share Stories",
   description: "A publishing platform for storytellers and creators",
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -20,10 +25,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${_geistSans.variable} ${_geistMono.variable} bg-white font-sans text-gray-900`}
+        className={`${_geistSans.className} ${_geistMono.className} bg-white font-sans text-gray-900`}
       >
-        <Navigation />
-        <main className="min-h-screen">{children}</main>
+        <Providers>
+          <Navigation />
+          <main className="min-h-screen">{children}</main>
+        </Providers>
         <footer className="border-t border-gray-200 bg-gray-50 py-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 md:grid-cols-4">

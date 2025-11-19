@@ -9,6 +9,8 @@ type ToasterToast = {
   onOpenChange?: (open: boolean) => void;
 };
 
+type ToastInput = Omit<ToasterToast, "id">;
+
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
@@ -53,10 +55,10 @@ export function useToast() {
     toasts: [],
   });
 
-  function toast(props: ToasterToast) {
+  function toast(props: ToastInput) {
     const id = genId();
 
-    const update = (props: ToasterToast) =>
+    const update = (props: ToastInput) =>
       dispatch({
         type: "UPDATE_TOAST",
         toast: { ...props, id },
@@ -119,24 +121,6 @@ function toastReducer(state: State, action: ActionType): State {
 
     case "DISMISS_TOAST": {
       const { toastId } = action;
-
-      if (toastId) {
-        setTimeout(() => {
-          dispatch({
-            type: "REMOVE_TOAST",
-            toastId,
-          });
-        }, TOAST_REMOVE_DELAY);
-      } else {
-        state.toasts.forEach((toast) => {
-          setTimeout(() => {
-            dispatch({
-              type: "REMOVE_TOAST",
-              toastId: toast.id,
-            });
-          }, TOAST_REMOVE_DELAY);
-        });
-      }
 
       return {
         ...state,
