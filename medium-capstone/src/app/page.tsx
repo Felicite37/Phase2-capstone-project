@@ -80,22 +80,20 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section */}
-      <section className="min-h-[60vh] bg-gradient-to-b from-primary/5 to-background flex items-center justify-center px-4">
+      <section className="min-h-[60vh] bg-linear-to-b from-primary/5 to-background flex items-center justify-center px-4">
         <div className="max-w-4xl mx-auto text-center space-y-6">
+          <p className="text-sm uppercase tracking-wide text-primary">
+            Publishing Platform
+          </p>
           <h1 className="text-5xl md:text-6xl font-bold text-foreground text-balance">
             Share Your Stories with the World
           </h1>
           <p className="text-xl text-muted-foreground text-balance">
-            Join thousands of writers sharing their insights, experiences, and
-            ideas. Start publishing today.
+            Join thousands of writers sharing their insights, experiences, and ideas.
+            Start publishing today.
           </p>
           <div className="flex gap-4 justify-center flex-col sm:flex-row">
-            <Button
-              size="lg"
-              asChild
-              className="bg-primary hover:bg-primary/90"
-            >
+            <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
               <Link href="/signup">Start Writing</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
@@ -105,7 +103,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Articles */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="space-y-8">
           <div>
@@ -116,6 +113,7 @@ export default function Home() {
               Discover great reads from our community
             </p>
           </div>
+
           {isLoading && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(3)].map((_, idx) => (
@@ -126,11 +124,13 @@ export default function Home() {
               ))}
             </div>
           )}
+
           {isError && (
             <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-destructive">
               We couldn&apos;t load posts right now. Please refresh.
             </div>
           )}
+
           {!isLoading && !isError && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {sortedPosts.map((post) => {
@@ -263,7 +263,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="bg-primary text-primary-foreground py-16 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">
@@ -277,86 +276,7 @@ export default function Home() {
           </Button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <h3 className="font-bold text-foreground mb-4">PublishHub</h3>
-              <p className="text-sm text-muted-foreground">
-                A platform for sharing ideas and stories with the world.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link
-                    href="/explore"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    Explore
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/about"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    About
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    Terms
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Connect</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    GitHub
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border mt-8 pt-8 text-sm text-muted-foreground">
-            <p>&copy; 2025 PublishHub. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
+

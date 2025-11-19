@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addComment, fetchPosts, toggleLike } from "@/lib/api/posts";
+import { addComment, fetchPosts, toggleLike } from "@/types/posts";
 import { Comment, Post } from "@/types/post";
 import { useAuth } from "./use-auth";
 
@@ -10,6 +10,7 @@ export function usePosts() {
     queryKey: POSTS_QUERY_KEY,
     queryFn: fetchPosts,
     staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -25,7 +26,9 @@ export function useToggleLike() {
     onSuccess: (updatedPost) => {
       queryClient.setQueryData<Post[]>(POSTS_QUERY_KEY, (prev) => {
         if (!prev) return prev;
-        return prev.map((post) => (post.id === updatedPost.id ? updatedPost : post));
+        return prev.map((post) =>
+          post.id === updatedPost.id ? updatedPost : post
+        );
       });
     },
   });
@@ -36,7 +39,13 @@ export function useAddComment() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+    mutationFn: async ({
+      postId,
+      content,
+    }: {
+      postId: string;
+      content: string;
+    }) => {
       if (!user) throw new Error("You must be signed in to comment.");
       const comment: Omit<Comment, "id" | "createdAt"> = {
         postId,
@@ -53,10 +62,10 @@ export function useAddComment() {
     onSuccess: (updatedPost) => {
       queryClient.setQueryData<Post[]>(POSTS_QUERY_KEY, (prev) => {
         if (!prev) return prev;
-        return prev.map((post) => (post.id === updatedPost.id ? updatedPost : post));
+        return prev.map((post) =>
+          post.id === updatedPost.id ? updatedPost : post
+        );
       });
     },
   });
 }
-
-

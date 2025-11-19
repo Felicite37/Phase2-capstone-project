@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Editor } from "@/components/editor";
-import { createPost } from "@/lib/api/posts";
+import { createPost } from "@/types/posts";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,7 +18,8 @@ export default function WritePage() {
   const publishMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("You must be signed in to publish.");
-      if (!draftContent.trim()) throw new Error("Please write something first.");
+      if (!draftContent.trim())
+        throw new Error("Please write something first.");
       return createPost({
         title: title.trim(),
         content: draftContent.trim(),
@@ -41,7 +42,8 @@ export default function WritePage() {
     onError: (error) => {
       toast({
         title: "Unable to publish",
-        description: error instanceof Error ? error.message : "Try again shortly.",
+        description:
+          error instanceof Error ? error.message : "Try again shortly.",
       });
     },
   });
