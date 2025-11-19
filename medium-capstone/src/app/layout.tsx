@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import Navigation from "@/components/navigation";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const _geistSans = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans-custom" });
+const serif = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif-custom",
+});
 
 export const metadata: Metadata = {
   title: "Medium - Read, Write, and Share Stories",
@@ -25,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${_geistSans.className} ${_geistMono.className} bg-white font-sans text-gray-900`}
+        className={`${sans.variable} ${serif.variable} bg-white font-sans text-gray-900`}
       >
         <Providers>
           <Navigation />

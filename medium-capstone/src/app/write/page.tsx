@@ -1,22 +1,61 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Editor } from "@/components/editor";
+import { createPost } from "@/lib/api/posts";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WritePage() {
   const [title, setTitle] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("You must be signed in to publish.");
+      if (!draftContent.trim()) throw new Error("Please write something first.");
+      return createPost({
+        title: title.trim(),
+        content: draftContent.trim(),
+        author: {
+          id: user.id,
+          name: user.name,
+          avatar:
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80",
+        },
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Post published",
+        description: "Your story is live in the feed.",
+      });
+      setTitle("");
+      setDraftContent("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to publish",
+        description: error instanceof Error ? error.message : "Try again shortly.",
+      });
+    },
+  });
 
   const handleSave = (content: string) => {
-    // This is where you would call your API to save a draft
-    // For now we just log it so the flow is visible.
-    console.log("Draft saved:", { title, content });
+    setDraftContent(content);
+    toast({
+      title: "Draft saved",
+      description: "We saved the latest version of your draft locally.",
+    });
   };
 
   const handlePublish = () => {
-    // This is where you would call your API to publish the post
-    console.log("Publish requested for:", title);
+    publishMutation.mutate();
   };
 
   return (
@@ -34,9 +73,13 @@ export default function WritePage() {
             <Button
               className="bg-primary hover:bg-primary/90"
               onClick={handlePublish}
-              disabled={!title.trim()}
+              disabled={
+                publishMutation.isPending ||
+                !title.trim() ||
+                !draftContent.trim()
+              }
             >
-              Publish
+              {publishMutation.isPending ? "Publishing..." : "Publish"}
             </Button>
           </div>
 

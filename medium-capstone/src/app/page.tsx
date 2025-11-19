@@ -1,57 +1,83 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
-
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  author: string;
-  date: string;
-  reads: number;
-  likes: number;
-  category: string;
-}
-
-const featuredArticles: Article[] = [
-  {
-    id: "1",
-    title: "The Future of Web Development",
-    excerpt:
-      "Exploring the latest trends and technologies shaping the web development landscape in 2025.",
-    author: "Sarah Chen",
-    date: "Nov 15, 2025",
-    reads: 2400,
-    likes: 320,
-    category: "Technology",
-  },
-  {
-    id: "2",
-    title: "Building Better User Experiences",
-    excerpt:
-      "A deep dive into UX principles that make applications both beautiful and functional.",
-    author: "Marcus Williams",
-    date: "Nov 14, 2025",
-    reads: 1800,
-    likes: 245,
-    category: "Design",
-  },
-  {
-    id: "3",
-    title: "Scaling Your Startup: Lessons Learned",
-    excerpt:
-      "Real-world advice from founders who scaled their startups from zero to millions in revenue.",
-    author: "Alex Rivera",
-    date: "Nov 13, 2025",
-    reads: 3100,
-    likes: 420,
-    category: "Business",
-  },
-];
+import { useAuth } from "@/hooks/use-auth";
+import { useAddComment, usePosts, useToggleLike } from "@/hooks/use-posts";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { data: posts = [], isLoading, isError } = usePosts();
+  const toggleLike = useToggleLike();
+  const addComment = useAddComment();
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+
+  const sortedPosts = useMemo(
+    () => posts.slice().sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1)),
+    [posts]
+  );
+
+  const handleLike = (postId: string) => {
+    toggleLike.mutate(postId, {
+      onError: (error) => {
+        toast({
+          title: "Unable to update like",
+          description:
+            error instanceof Error ? error.message : "Please try again in a moment.",
+        });
+      },
+    });
+  };
+
+  const handleShare = async (postId: string, title: string) => {
+    if (typeof window === "undefined") return;
+    const fallbackUrl = `${window.location.origin}/posts/${postId}`;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title, url: fallbackUrl });
+      } else {
+        await window.navigator.clipboard.writeText(fallbackUrl);
+        toast({
+          title: "Link copied",
+          description: "Post URL copied to your clipboard.",
+        });
+      }
+    } catch {
+      toast({
+        title: "Share cancelled",
+        description: "We could not share the post right now.",
+      });
+    }
+  };
+
+  const handleAddComment = (postId: string) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+    addComment.mutate(
+      { postId, content },
+      {
+        onSuccess: () => {
+          setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+          toast({
+            title: "Comment added",
+            description: "Your comment has been added to the conversation.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Unable to add comment",
+            description:
+              error instanceof Error ? error.message : "Please try again later.",
+          });
+        },
+      }
+    );
+  };
+
   return (
     <main>
       {/* Hero Section */}
@@ -90,63 +116,150 @@ export default function Home() {
               Discover great reads from our community
             </p>
           </div>
+          {isLoading && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-64 rounded-lg border border-border bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          )}
+          {isError && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-destructive">
+              We couldn&apos;t load posts right now. Please refresh.
+            </div>
+          )}
+          {!isLoading && !isError && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {sortedPosts.map((post) => {
+                const isLiked = user ? post.likedBy.includes(user.id) : false;
+                return (
+                  <article
+                    key={post.id}
+                    className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow flex flex-col gap-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full bg-muted bg-cover bg-center"
+                        style={{ backgroundImage: `url(${post.author.avatar})` }}
+                        aria-hidden
+                      />
+                      <div>
+                        <p className="font-semibold text-card-foreground">
+                          {post.author.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(post.publishedAt).toLocaleDateString()} ·{" "}
+                          {post.readTime} min read
+                        </p>
+                      </div>
+                    </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredArticles.map((article) => (
-              <article
-                key={article.id}
-                className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-bold text-lg text-card-foreground line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <span className="text-xs font-semibold px-3 py-1 bg-accent/10 text-accent rounded-full whitespace-nowrap">
-                      {article.category}
-                    </span>
-                  </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-card-foreground line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-muted-foreground line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    </div>
 
-                  <p className="text-muted-foreground line-clamp-3">
-                    {article.excerpt}
-                  </p>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-border px-3 py-1"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-semibold text-card-foreground">
-                      {article.author}
-                    </span>
-                    <span>•</span>
-                    <span>{article.date}</span>
-                  </div>
+                    <div className="flex gap-2 pt-4 border-t border-border">
+                      <button
+                        className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                        onClick={() => handleLike(post.id)}
+                        disabled={toggleLike.isPending}
+                      >
+                        <Heart
+                          size={16}
+                          className={isLiked ? "fill-red-500 text-red-500" : ""}
+                        />
+                        <span>{post.likes}</span>
+                      </button>
+                      <div className="flex-1 text-sm text-muted-foreground flex items-center justify-center gap-1">
+                        <MessageCircle size={16} />
+                        <span>{post.comments.length}</span>
+                      </div>
+                      <button
+                        className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                        onClick={() => handleShare(post.id, post.title)}
+                      >
+                        <Share2 size={16} />
+                        <span className="hidden sm:inline">Share</span>
+                      </button>
+                    </div>
 
-                  <div className="flex gap-4 text-sm text-muted-foreground pt-2">
-                    <span className="flex items-center gap-1">
-                      {article.reads} reads
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart size={16} />
-                      {article.likes}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2 pt-4 border-t border-border">
-                    <button className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1">
-                      <Heart size={16} />
-                      <span className="hidden sm:inline">Like</span>
-                    </button>
-                    <button className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1">
-                      <MessageCircle size={16} />
-                      <span className="hidden sm:inline">Comment</span>
-                    </button>
-                    <button className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1">
-                      <Share2 size={16} />
-                      <span className="hidden sm:inline">Share</span>
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                    <div className="space-y-3 rounded-lg border border-border p-4">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <p className="font-semibold text-card-foreground">
+                          Comments ({post.comments.length})
+                        </p>
+                        {!user && <p className="text-xs">Sign in to participate</p>}
+                      </div>
+                      <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                        {post.comments.length === 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            Be the first to comment.
+                          </p>
+                        )}
+                        {post.comments.map((comment) => (
+                          <div key={comment.id} className="text-sm">
+                            <p className="font-semibold text-card-foreground">
+                              {comment.author.name}
+                            </p>
+                            <p className="text-muted-foreground">{comment.content}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="space-y-2">
+                        <textarea
+                          rows={3}
+                          value={commentInputs[post.id] ?? ""}
+                          onChange={(e) =>
+                            setCommentInputs((prev) => ({
+                              ...prev,
+                              [post.id]: e.target.value,
+                            }))
+                          }
+                          placeholder={
+                            user ? "Share your thoughts..." : "Sign in to comment"
+                          }
+                          className="w-full resize-none rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                          disabled={!user || addComment.isPending}
+                        />
+                        <Button
+                          size="sm"
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={() => handleAddComment(post.id)}
+                          disabled={
+                            !user || addComment.isPending || !commentInputs[post.id]
+                          }
+                        >
+                          {addComment.isPending ? "Posting..." : "Post comment"}
+                        </Button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
