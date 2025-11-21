@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Author {
+  id      String   @id @default(uuid())
+  name    String
+  email   String   @unique
+  password String 
+  avatar  String
+  bio     String?
+
+  posts    Post[]
+  comments Comment[]
+}
+
+model Post {
+  id          String     @id @default(uuid())
+  title       String
+  excerpt     String?
+  content     String
+  coverImage  String?
+  tags        String[]   // Prisma supports string[] directly
+  publishedAt DateTime
+  readTime    Int
+  likes       Int        @default(0)
+
+  authorId    String
+  author      Author     @relation(fields: [authorId], references: [id])
+
+  likedBy     String[]   // List of user IDs that liked the post
+
+  comments    Comment[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+
+  authorId  String
+  author    Author   @relation(fields: [authorId], references: [id])
+}
